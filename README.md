@@ -14,7 +14,7 @@ This is a simple Python Flask application that monitors and displays the CPU and
     Ensure you have `pip` installed, then run:
 
     ```bash
-    pip3 install -r requirements.txt
+    pip install -r requirements.txt
     ```
 
 ## Usage
@@ -22,7 +22,7 @@ This is a simple Python Flask application that monitors and displays the CPU and
 1. **Run the Flask application:**
 
     ```bash
-    python3 app.py
+    python app.py
     ```
 
 2. **Open the application in your web browser:**
