@@ -18,7 +18,7 @@ docker build -t demo-dockerized-flasksystemmonitor .
 Run the Docker container with the following command:
 
 ```bash
-docker run -p 5000:5000 demo-dockerized-flasksystemmonitor
+docker run -d -p 5000:5000 demo-dockerized-flasksystemmonitor
 ```
 
 ## Usage
