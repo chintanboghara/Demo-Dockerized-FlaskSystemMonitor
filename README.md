@@ -1,30 +1,27 @@
-# System Resource Monitor with Flask and psutil
 
-This is a simple Python Flask application that monitors and displays the CPU and memory usage of the server using the `psutil` library. The application runs on port 5000 and provides a real-time snapshot of system resources.
+# Demo-Dockerized-FlaskSystemMonitor
 
-## Prerequisites
+This is a simple Flask application that monitors the CPU and memory usage of the system. It provides an alert message if either CPU or memory utilization exceeds 80%.
 
-- Python 3.x
-- pip (Python package installer)
+## Running with Docker
 
-## Installation
+### 1. Build the Docker image
 
-* **Install the dependencies:**
+In the project directory, build the Docker image using:
 
-    Ensure you have `pip` installed, then run:
+```bash
+docker build -t demo-dockerized-flasksystemmonitor .
+```
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+### 2. Run the Docker container
+
+Run the Docker container with the following command:
+
+```bash
+docker run -p 5000:5000 demo-dockerized-flasksystemmonitor
+```
 
 ## Usage
 
-1. **Run the Flask application:**
-
-    ```bash
-    python app.py
-    ```
-
-2. **Open the application in your web browser:**
-
-    Navigate to [http://localhost:5000/](http://localhost:5000/) to see the current CPU and memory usage of the server.
+- The app displays the current CPU and memory usage.
+- If either the CPU or memory utilization exceeds 80%, an alert message will be displayed.
