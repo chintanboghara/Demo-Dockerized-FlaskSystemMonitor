@@ -1,16 +1,68 @@
 import psutil
 from flask import Flask, render_template
+import threading
+import time
+import collections
 
 app = Flask(__name__)
 
+# Global Data Stores for historical data
+cpu_history = collections.deque(maxlen=60)
+mem_history = collections.deque(maxlen=60)
+timestamp_history = collections.deque(maxlen=60)
+
+def collect_system_metrics():
+    """Collects and stores system metrics (CPU, Memory) at regular intervals."""
+    while True:
+        cpu_percent = psutil.cpu_percent()
+        mem_percent = psutil.virtual_memory().percent
+        current_time = time.strftime('%H:%M:%S')
+
+        cpu_history.append(cpu_percent)
+        mem_history.append(mem_percent)
+        timestamp_history.append(current_time)
+        
+        time.sleep(5) # Collect data every 5 seconds
+
+# Start the background thread for data collection
+metrics_thread = threading.Thread(target=collect_system_metrics)
+metrics_thread.daemon = True
+metrics_thread.start()
+
 @app.route("/")
 def index():
-    cpu_percent = psutil.cpu_percent()
-    mem_percent = psutil.virtual_memory().percent
+    # Current values for gauges
+    current_cpu_percent = psutil.cpu_percent()
+    current_mem_percent = psutil.virtual_memory().percent
+    disk_percent = psutil.disk_usage('/').percent
+    
     message = None
-    if cpu_percent > 80 or mem_percent > 80:
-        message = "High CPU or memory utilization detected!"
-    return render_template("index.html", cpu_percent=cpu_percent, mem_percent=mem_percent, message=message)
+    if current_cpu_percent > 80 or current_mem_percent > 80 or disk_percent > 80:
+        message = "High CPU, memory, or disk utilization detected!"
+
+    # Network statistics
+    net_io = psutil.net_io_counters()
+    bytes_sent = bytes_to_readable(net_io.bytes_sent)
+    bytes_recv = bytes_to_readable(net_io.bytes_recv)
+
+    return render_template("index.html", 
+                           cpu_percent=current_cpu_percent, 
+                           mem_percent=current_mem_percent, 
+                           disk_percent=disk_percent, 
+                           message=message, 
+                           bytes_sent_readable=bytes_sent, 
+                           bytes_recv_readable=bytes_recv,
+                           cpu_history=list(cpu_history),
+                           mem_history=list(mem_history),
+                           timestamp_history=list(timestamp_history))
+
+def bytes_to_readable(b):
+    """Converts bytes to a human-readable format (KB, MB, GB)."""
+    for unit in ['', 'K', 'M', 'G', 'T', 'P']:
+        if b < 1024:
+            return f"{b:.2f}{unit}B"
+        b /= 1024
+    return f"{b:.2f}PB"
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0',port=5000)

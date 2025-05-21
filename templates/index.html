@@ -17,6 +17,25 @@
       <h1>System Monitoring Dashboard</h1>
       <div id="cpu-gauge"></div>
       <div id="mem-gauge"></div>
+      <div id="disk-gauge"></div>
+      
+      <h2>Current Usage</h2>
+      <div class="gauges-container">
+          <div id="cpu-gauge" class="plotly-graph-div"></div>
+          <div id="mem-gauge" class="plotly-graph-div"></div>
+          <div id="disk-gauge" class="plotly-graph-div"></div>
+      </div>
+
+      <div class="network-stats">
+        <h2>Network Statistics</h2>
+        <p>Bytes Sent: {{ bytes_sent_readable }}</p>
+        <p>Bytes Received: {{ bytes_recv_readable }}</p>
+      </div>
+
+      <h2>Historical Usage (Last ~5 Minutes)</h2>
+      <div id="cpu-history-chart" class="plotly-graph-div"></div>
+      <div id="mem-history-chart" class="plotly-graph-div"></div>
+
       {% if message %}
       <div class="alert alert-danger">{{ message }}</div>
       {% endif %}
@@ -25,7 +44,7 @@
       var cpuGauge = {
           type: "indicator",
           mode: "gauge+number",
-          value: {{ cpu_percent }},
+          value: {{ cpu_percent }}, // This will be updated later if current_cpu_percent is available
           gauge: {
               axis: { range: [null, 100] },
               bar: { color: "#1f77b4" },
@@ -40,7 +59,7 @@
               threshold: {
                   line: { color: "red", width: 4 },
                   thickness: 0.75,
-                  value: {{ cpu_percent }}
+                  value: {{ cpu_percent }} // This will be updated later if current_cpu_percent is available
               }
           }
       };
@@ -48,7 +67,7 @@
       var memGauge = {
           type: "indicator",
           mode: "gauge+number",
-          value: {{ mem_percent }},
+          value: {{ mem_percent }}, // This will be updated later if current_mem_percent is available
           gauge: {
               axis: { range: [null, 100] },
               bar: { color: "#1f77b4" },
@@ -63,16 +82,76 @@
               threshold: {
                   line: { color: "red", width: 4 },
                   thickness: 0.75,
-                  value: {{ mem_percent }}
+                  value: {{ mem_percent }} // This will be updated later if current_mem_percent is available
               }
           }
       };
 
+      // Correct variable names if they were changed in app.py
+      // Assuming cpu_percent and mem_percent are the correct current values passed from Flask
+      // If app.py uses current_cpu_percent and current_mem_percent, update these gauge values accordingly.
+      // For example: value: {{ current_cpu_percent }}
+
       var cpuGaugeLayout = { title: "CPU Utilization" };
       var memGaugeLayout = { title: "Memory Utilization" };
+      var diskGaugeLayout = { title: "Disk Utilization" };
+
+      var diskGauge = {
+          type: "indicator",
+          mode: "gauge+number",
+          value: {{ disk_percent }},
+          gauge: {
+              axis: { range: [null, 100] },
+              bar: { color: "#1f77b4" },
+              bgcolor: "white",
+              borderwidth: 2,
+              bordercolor: "#ccc",
+              steps: [
+                  { range: [0, 50], color: "#d9f0a3" },
+                  { range: [50, 85], color: "#ffeb84" },
+                  { range: [85, 100], color: "#ff5f5f" }
+              ],
+              threshold: {
+                  line: { color: "red", width: 4 },
+                  thickness: 0.75,
+                  value: {{ disk_percent }}
+              }
+          }
+      };
 
       Plotly.newPlot('cpu-gauge', [cpuGauge], cpuGaugeLayout);
       Plotly.newPlot('mem-gauge', [memGauge], memGaugeLayout);
+      Plotly.newPlot('disk-gauge', [diskGauge], diskGaugeLayout);
+
+      // CPU History Chart
+      var cpuHistoryTrace = {
+          x: {{ timestamp_history | tojson }},
+          y: {{ cpu_history | tojson }},
+          mode: 'lines+markers',
+          type: 'scatter',
+          name: 'CPU Usage Over Time'
+      };
+      var cpuHistoryLayout = {
+          title: 'CPU Usage History (Last ~5 Minutes)',
+          xaxis: { title: 'Time' },
+          yaxis: { title: 'CPU Usage (%)', range: [0, 100] }
+      };
+      Plotly.newPlot('cpu-history-chart', [cpuHistoryTrace], cpuHistoryLayout);
+
+      // Memory History Chart
+      var memHistoryTrace = {
+          x: {{ timestamp_history | tojson }},
+          y: {{ mem_history | tojson }},
+          mode: 'lines+markers',
+          type: 'scatter',
+          name: 'Memory Usage Over Time'
+      };
+      var memHistoryLayout = {
+          title: 'Memory Usage History (Last ~5 Minutes)',
+          xaxis: { title: 'Time' },
+          yaxis: { title: 'Memory Usage (%)', range: [0, 100] }
+      };
+      Plotly.newPlot('mem-history-chart', [memHistoryTrace], memHistoryLayout);
     </script>
   </body>
 </html>
