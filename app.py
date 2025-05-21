@@ -3,8 +3,39 @@ from flask import Flask, render_template
 import threading
 import time
 import collections
+import json
+import os
+import logging
 
 app = Flask(__name__)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Global variable for alert threshold
+ALERT_THRESHOLD = 80 # Default value
+
+def load_config():
+    """Loads alert threshold from config.json."""
+    global ALERT_THRESHOLD
+    config_path = 'config.json'
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                config_data = json.load(f)
+                ALERT_THRESHOLD = config_data.get('alert_threshold_percent', ALERT_THRESHOLD)
+                logging.info(f"Loaded alert threshold from {config_path}: {ALERT_THRESHOLD}%")
+        else:
+            logging.warning(f"{config_path} not found. Using default alert threshold: {ALERT_THRESHOLD}%")
+    except json.JSONDecodeError:
+        logging.warning(f"Error decoding {config_path}. Using default alert threshold: {ALERT_THRESHOLD}%")
+    except KeyError:
+        logging.warning(f"'alert_threshold_percent' key not found in {config_path}. Using default alert threshold: {ALERT_THRESHOLD}%")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred while loading {config_path}: {e}. Using default alert threshold: {ALERT_THRESHOLD}%")
+
+# Load configuration at startup
+load_config()
 
 # Global Data Stores for historical data
 cpu_history = collections.deque(maxlen=60)
@@ -37,8 +68,8 @@ def index():
     disk_percent = psutil.disk_usage('/').percent
     
     message = None
-    if current_cpu_percent > 80 or current_mem_percent > 80 or disk_percent > 80:
-        message = "High CPU, memory, or disk utilization detected!"
+    if current_cpu_percent > ALERT_THRESHOLD or current_mem_percent > ALERT_THRESHOLD or disk_percent > ALERT_THRESHOLD:
+        message = f"High CPU, memory, or disk utilization detected (Threshold: {ALERT_THRESHOLD}%)!"
 
     # Network statistics
     net_io = psutil.net_io_counters()
