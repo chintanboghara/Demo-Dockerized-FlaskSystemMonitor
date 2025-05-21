@@ -6,7 +6,9 @@ This project demonstrates a simple Flask web application that monitors the CPU a
 
 - Displays current CPU usage percentage of the container
 - Displays current memory usage percentage of the container
-- Alerts if CPU or memory usage exceeds 80%
+- Displays current disk usage percentage of the container's root filesystem
+- Displays network statistics (bytes sent and received)
+- Alerts if CPU, memory, or disk usage exceeds 80%
 
 ## Building and Running with Docker
 
@@ -31,5 +33,5 @@ This starts the Flask app inside a Docker container, accessible on port 5000.
 ## Usage
 
 - Access the application at `http://localhost:5000`
-- The page displays current CPU and memory usage of the container
-- An alert message appears if either usage exceeds 80%
+- The page displays current CPU, memory, and disk usage of the container, as well as network statistics.
+- An alert message appears if CPU, memory, or disk usage exceeds 80%
